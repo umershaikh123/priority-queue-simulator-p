@@ -13,214 +13,6 @@ import {
 import StyledButton from "@/components/Button"
 import CssTextField from "@/components/TextField"
 
-// const PriorityTable = ({ A, a, b, z0, M, C, Length }) => {
-//   const [tableData, setTableData] = useState([])
-//   const [priority, setpriority] = useState([])
-//   const [tableGenerated, setTableGenerated] = useState(false)
-
-//   function mod(a, b) {
-//     return ((a % b) + b) % b
-//   }
-
-//   const generateTableData = () => {
-//     const data = []
-//     let Z = z0
-
-//     const e = mod(556169139, 1994)
-//     // console.log("mod = ", e)
-
-//     for (let i = 1; i <= Length.TableLength; i++) {
-//       // const R = (A * Z + C) % M
-//       let R = 0
-
-//       const calc1 = A * Z
-//       const calc2 = parseInt(calc1) + parseInt(C)
-
-//       R = mod(calc2, parseInt(M))
-
-//       const randomNumber = Math.random()
-//       const Y = (b - a) * randomNumber + a
-//       const roundOff = Math.round(Y)
-
-//       data.push({ serialNo: i, Z, R, randomNumber, Y, roundOff })
-//       Z = R
-
-//       // console.log("calc2 = ", calc2)
-//       // console.log("M = ", parseInt(M))
-//       // console.log("A = ", A)
-//       // console.log("Z = ", Z)
-//       // console.log("C = ", C)
-//       // console.log("R = ", R)
-//     }
-
-//     setTableData(data)
-//     setTableGenerated(true)
-//   }
-
-//   return (
-//     <div>
-//       <div className=" flex justify-center  items-center">
-//         <StyledButton
-//           onClick={generateTableData}
-//           color="#004021"
-//           background="#076638"
-//         >
-//           Submit
-//         </StyledButton>
-//       </div>
-
-//       {tableGenerated && (
-//         <>
-//           <h1 className="text-2xl font-medium">Priority Table</h1>
-//           <table className="w-full mt-4 mb-7 text-left">
-//             <thead>
-//               <tr>
-//                 <th className="px-4">Serial No</th>
-//                 <th className="px-4">Z iteration</th>
-//                 <th className="px-4">R</th>
-//                 <th className="px-4">Random Number</th>
-//                 <th className="px-4">Priority</th>
-//                 <th className="px-4">Priority Round Off</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {tableData.map(row => (
-//                 <tr key={row.serialNo}>
-//                   <td className="px-4">{row.serialNo}</td>
-//                   <td className="px-4">{row.Z}</td>
-//                   <td className="px-4">{row.R}</td>
-//                   <td className="px-4">{row.randomNumber.toFixed(6)}</td>
-//                   <td className="px-4">{row.Y}</td>
-//                   <td className="px-4">{row.roundOff}</td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </>
-//       )}
-//     </div>
-//   )
-// }
-
-// function Priority(TableLength) {
-//   const [A, setA] = useState(55)
-//   const [a, seta] = useState(1)
-//   const [b, setb] = useState(3)
-//   const [z0, setz0] = useState(10112166)
-//   const [M, setM] = useState(1994)
-//   const [C, setC] = useState(9)
-
-//   const handleA = e => {
-//     setA(parseFloat(e.target.value))
-//   }
-
-//   const handleb = e => {
-//     setb(e.target.value)
-//   }
-
-//   const handlea = e => {
-//     seta(e.target.value)
-//   }
-
-//   const handleC = e => {
-//     setC(e.target.value)
-//   }
-
-//   const handleM = e => {
-//     setM(e.target.value)
-//   }
-
-//   const handleZ0 = e => {
-//     setz0(e.target.value)
-//   }
-
-//   return (
-//     <>
-//       <h1 className="text-2xl font-medium">Priority Inputs</h1>
-
-//       <div className=" flex font-medium space-x-12 ">
-//         <div className=" flex-col ">
-//           <CssTextField
-//             label="A"
-//             variant="outlined"
-//             type="number"
-//             value={A}
-//             onChange={handleA}
-//           />
-//           <p>A</p>
-//         </div>
-
-//         <div className=" flex-col ">
-//           <CssTextField
-//             label="M"
-//             variant="outlined"
-//             type="number"
-//             value={M}
-//             onChange={handleM}
-//           />
-//           <p>M</p>
-//         </div>
-
-//         <div className=" flex-col ">
-//           <CssTextField
-//             label="Z0"
-//             variant="outlined"
-//             type="number"
-//             value={z0}
-//             onChange={handleZ0}
-//           />
-//           <p>Z0</p>
-//         </div>
-//       </div>
-
-//       <div className=" flex font-medium space-x-12 ">
-//         <div className=" flex-col ">
-//           <CssTextField
-//             label="C"
-//             variant="outlined"
-//             type="number"
-//             value={C}
-//             onChange={handleC}
-//           />
-//           <p>C</p>
-//         </div>
-
-//         <div className=" flex-col ">
-//           <CssTextField
-//             label="a"
-//             variant="outlined"
-//             type="number"
-//             value={a}
-//             onChange={handlea}
-//           />
-//           <p>a</p>
-//         </div>
-
-//         <div className=" flex-col ">
-//           <CssTextField
-//             label="b"
-//             variant="outlined"
-//             type="number"
-//             value={b}
-//             onChange={handleb}
-//           />
-//           <p>b</p>
-//         </div>
-//       </div>
-
-//       <PriorityTable
-//         A={A}
-//         a={a}
-//         b={b}
-//         z0={z0}
-//         M={M}
-//         C={C}
-//         Length={TableLength}
-//       />
-//     </>
-//   )
-// }
-
 export default function Home() {
   const [arrivalRate, setArrivalRate] = useState(0)
   const [serviceRate, setServiceRate] = useState(0)
@@ -231,9 +23,14 @@ export default function Home() {
   const [serviceTimes, setServiceTimes] = useState([])
   const [startTimes, setstartTimes] = useState([])
   const [endTime, setendTime] = useState([])
+
+  const [prioritystartTimes, setprioritystartTimes] = useState([])
+  const [priorityendTime, setpriorityendTime] = useState([])
+
   const [TurnaroundTime, setTurnaroundTime] = useState([])
   const [WaitTime, setWaitTime] = useState([])
   const [ResponseTime, setResponseTime] = useState([])
+  const [priority, setpriority] = useState([])
 
   const [avgTurnaroundTime, setavgTurnaroundTime] = useState(0)
   const [avgWaitTime, setavgWaitTime] = useState(0)
@@ -454,6 +251,7 @@ export default function Home() {
     setendTime(End_Time)
     setResponseTime(response_Time)
     generateTableData()
+    calculatePriorityTable()
     setTableGenerated(true)
 
     // Calculate Utilization Factor (ρ)
@@ -495,7 +293,6 @@ export default function Home() {
     return factorial
   }
   const [tableData, setTableData] = useState([])
-  const [priority, setpriority] = useState([])
 
   function mod(a, b) {
     return ((a % b) + b) % b
@@ -523,7 +320,7 @@ export default function Home() {
 
       data.push({ serialNo: i, Z, R, randomNumber, Y, roundOff })
       Z = R
-
+      priority.push(roundOff)
       // console.log("calc2 = ", calc2)
       // console.log("M = ", parseInt(M))
       // console.log("A = ", A)
@@ -532,7 +329,54 @@ export default function Home() {
       // console.log("R = ", R)
     }
 
+    setpriority(priority)
     setTableData(data)
+  }
+  let customersWithTimes = []
+  let startTime = 0
+  let customer = {}
+  const calculatePriorityTable = () => {
+    customersWithTimes = cpValues.map((value, index) => {
+      console.log("index", index)
+      customer = {
+        ...value,
+        priority: priority[index], // Get priority based on your data
+        arrivalTime: arrivalTimes[index], // Get the arrival time
+        serviceTime: serviceTimes[index], // Get the service time
+      }
+
+      // console.log("customer.arrivalTime[0] ", customer.arrivalTime)
+
+      // Calculate the start time
+
+      startTime = Math.max(customer.arrivalTime, 0)
+      console.log("startTime ", startTime)
+
+      for (let i = 0; i < index; i++) {
+        const otherCustomer = customersWithTimes[i]
+        if (
+          otherCustomer && // Ensure otherCustomer exists
+          otherCustomer.arrivalTime <= customer.arrivalTime &&
+          otherCustomer.priority < customer.priority
+        ) {
+          startTime = Math.max(startTime, otherCustomer.endTime)
+        }
+      }
+      // Calculate the end time
+      const endTime = startTime + customer.serviceTime
+      prioritystartTimes.push(startTime)
+      priorityendTime.push(endTime)
+      // setprioritystartTimes(startTime)
+      // setpriorityendTime(endTime)
+
+      console.log(" P startTime", prioritystartTimes)
+      console.log(" P endTime", priorityendTime)
+      return {
+        ...customer,
+        startTime,
+        endTime,
+      }
+    })
   }
   return (
     <div className=" flex flex-col  justify-center items-center space-y-8 mt-4">
@@ -680,6 +524,8 @@ export default function Home() {
                 <th className=" text-white  px-4">Inter Arrival Time</th>
                 <th className=" text-white  px-4">Arrival Time</th>
                 <th className=" text-white  px-4">Service Time</th>
+                <th className=" text-white  px-4">Priority</th>
+
                 <th className=" text-white  px-4">Start Time</th>
                 <th className=" text-white  px-4">End Time</th>
                 <th className=" text-white  px-4">Turnaround Time</th>
@@ -699,20 +545,21 @@ export default function Home() {
                   <td className="  px-4">{interArrivalTimes[index] || 0}</td>
                   <td className="  px-4">{arrivalTimes[index] || 0}</td>
                   <td className="  px-4">{serviceTimes[index] || 1}</td>
+                  <td className="px-4">{priority[index]}</td>
 
                   <td
                     className={`px-4 ${
-                      startTimes[index] < 0 ? "text-red-500" : ""
+                      prioritystartTimes[index] < 0 ? "text-red-500" : ""
                     }`}
                   >
-                    {startTimes[index] || 0}
+                    {prioritystartTimes[index] || 0}
                   </td>
                   <td
                     className={`px-4 ${
-                      endTime[index] < 0 ? "text-red-500" : "text-black"
+                      priorityendTime[index] < 0 ? "text-red-500" : "text-black"
                     }`}
                   >
-                    {endTime[index] || 1}
+                    {priorityendTime[index] || 1}
                   </td>
                   <td
                     className={`px-4 ${
