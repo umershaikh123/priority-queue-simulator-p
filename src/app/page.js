@@ -433,31 +433,117 @@ export default function Home() {
     }
     setServiceTimes(serTime)
 
-    let startTime = 0
-    for (let i = 0; i < cpLookupTable.length - 1; i++) {
-      start_Time.push(startTime)
+    // let startTime = 0
+    // for (let i = 0; i < cpLookupTable.length - 1; i++) {
 
-      const r1 = startTime + serTime[i]
-      End_Time.push(r1)
+    //   const r1 = startTime + serTime[i]
 
-      const r2 = End_Time[i] - ArrivalTimes[i]
-      turnaround_Time.push(r2 > 0 ? r2 : -r2)
+    //   const r2 = End_Time[i] - ArrivalTimes[i]
+    //   start_Time.push(startTime)
+    //   End_Time.push(r1)
+    //   turnaround_Time.push(r2 > 0 ? r2 : -r2)
+    //   wait_Time.push(r3 > 0 ? r3 : -r3)
+    //   response_Time.push(r4 > 0 ? r4 : -r4)
 
-      const r3 = startTime - ArrivalTimes[i]
-      wait_Time.push(r3 > 0 ? r3 : -r3)
+    //   const r3 = startTime - ArrivalTimes[i]
 
-      const r4 = wait_Time[i] + serTime[i]
-      response_Time.push(r4 > 0 ? r4 : -r4)
+    //   const r4 = wait_Time[i] + serTime[i]
 
-      totalWaitTime += wait_Time[i]
-      totalTurnaroundTime += turnaround_Time[i]
+    //   totalWaitTime += wait_Time[i]
+    //   totalTurnaroundTime += turnaround_Time[i]
 
-      TotalTurnaround += turnaround_Time[i]
-      TotalResponseTime += response_Time[i]
-      TotalWaitTime += wait_Time[i]
+    //   TotalTurnaround += turnaround_Time[i]
+    //   TotalResponseTime += response_Time[i]
+    //   TotalWaitTime += wait_Time[i]
 
-      startTime = End_Time[i]
+    //   startTime = End_Time[i]
+    // }
+
+    function mmcSchedule(arrivalTimes, serviceTimes, numServers) {
+      // Validate input
+      if (
+        !Array.isArray(arrivalTimes) ||
+        !Array.isArray(serviceTimes) ||
+        arrivalTimes.length !== serviceTimes.length ||
+        numServers <= 0
+      ) {
+        throw new Error(
+          "Invalid input: arrivalTimes and serviceTimes must be arrays of equal length, and numServers must be a positive number."
+        )
+      }
+
+      // Initialize variables
+      const serverBusyTimes = new Array(numServers).fill(0) // Array to store server busy times
+      const customerTimes = [] // Array to store customer start/end times and additional metrics
+
+      // Loop through each customer
+      for (let i = 0; i < cpLookupTable.length - 1; i++) {
+        const arrivalTime = arrivalTimes[i]
+        const serviceTime = serviceTimes[i]
+
+        // Find the first available server
+        const availableServer = serverBusyTimes.reduce(
+          (minIndex, serverTime, index) =>
+            serverTime < serverBusyTimes[minIndex] ? index : minIndex,
+          0
+        )
+
+        // Calculate start and end times for the customer
+        const startTime = Math.max(
+          arrivalTime,
+          serverBusyTimes[availableServer]
+        )
+        const endTime = startTime + serviceTime
+
+        // Calculate response time (time from arrival to start of service)
+        const responseTime = startTime - arrivalTime
+
+        // Calculate waiting time (time spent waiting in queue)
+        const waitingTime = responseTime - arrivalTime
+
+        // Calculate turnaround time (time from arrival to completion)
+        const turnaroundTime = endTime - arrivalTime
+
+        // Update server busy time
+        serverBusyTimes[availableServer] = endTime
+
+        start_Time.push(startTime)
+        End_Time.push(endTime)
+        turnaround_Time.push(
+          turnaroundTime > 0 ? turnaroundTime : -turnaroundTime
+        )
+        wait_Time.push(waitingTime > 0 ? waitingTime : -waitingTime)
+        response_Time.push(responseTime > 0 ? responseTime : -responseTime)
+
+        TotalTurnaround += turnaroundTime > 0 ? turnaroundTime : -turnaroundTime
+        TotalResponseTime += responseTime > 0 ? responseTime : -responseTime
+        TotalWaitTime += waitingTime > 0 ? waitingTime : -waitingTime
+        // Add customer times and metrics to array
+        customerTimes.push({
+          startTime,
+          endTime,
+          responseTime,
+          waitingTime,
+          turnaroundTime,
+        })
+      }
+
+      return customerTimes
     }
+
+    //     const arrivalTimes = [0, 1, 2.5, 4, 5.2];
+    // const serviceTimes = [2, 1.5, 3, 2.2, 1.8];
+    // const numServers = 2;
+
+    const customerTimes = mmcSchedule(arrivalTimes, serviceTimes, servers)
+
+    console.log("Customer times:")
+    customerTimes.forEach(customerTime => {
+      console.log(
+        `\tCustomer: Start time: ${customerTime.startTime}, End time: ${customerTime.endTime}, Response time: ${customerTime.responseTime}, Waiting time: ${customerTime.waitingTime}, Turnaround time: ${customerTime.turnaroundTime}`
+      )
+    })
+
     // console.log("TotalTurnaround", TotalTurnaround)
     // console.log("TotalResponseTime", TotalResponseTime)
     // console.log("TotalWaitTime ", TotalWaitTime)
@@ -868,11 +954,12 @@ export default function Home() {
             <thead>
               <tr>
                 <th className=" text-white  px-4 ">S.no#</th>
+                <th className=" text-white  px-4">Cp Lookup</th>
                 <th className=" text-white  px-4">
                   Cumulative Probability (Cp)
                 </th>
-                <th className=" text-white  px-4">Cp Lookup</th>
                 <th className=" text-white  px-4">Avg Time Between Arrivals</th>
+                <th className=" text-white  px-4">Rand No</th>
 
                 <th className=" text-white  px-4">Inter Arrival Time</th>
                 <th className=" text-white  px-4">Arrival Time</th>
@@ -888,12 +975,14 @@ export default function Home() {
               {cpValues.map((value, index) => (
                 <tr key={index}>
                   <td className="  px-4">{value.x + 1}</td>
+                  <td className="  px-4">{cpLookupTable[index].toFixed(6)}</td>
                   <td className="  px-4">
                     {value.cumulativeProbability.toFixed(6)}
                   </td>
-                  <td className="  px-4">{cpLookupTable[index].toFixed(6)}</td>
                   <td className="  px-4">{value.x}</td>
-
+                  <td className="  px-4">
+                    {interArrivalTimesRand[index].toFixed(4)}
+                  </td>
                   <td className="  px-4">{interArrivalTimes[index] || 0}</td>
                   <td className="  px-4">{arrivalTimes[index] || 0}</td>
                   <td className="  px-4">{serviceTimes[index] || 1}</td>
