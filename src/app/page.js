@@ -798,7 +798,7 @@ export default function Home() {
         </>
       )}
 
-      {MM1tableGenerated && servers == 1 && (
+      {MM1tableGenerated && modelType == 1 && servers > 0 && (
         <div>
           <div className=" flex w-full  text-3xl  font-bold  justify-center items-center">
             M/M/{servers} TABLE
@@ -945,7 +945,7 @@ export default function Home() {
         </div>
       )}
 
-      {MM1tableGenerated && servers > 1 && (
+      {/* {MM1tableGenerated && servers > 1 && (
         <div>
           <div className=" flex w-full  text-3xl  font-bold  justify-center items-center">
             M/M/{servers} TABLE
@@ -1091,7 +1091,7 @@ export default function Home() {
             </table>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   )
 }
