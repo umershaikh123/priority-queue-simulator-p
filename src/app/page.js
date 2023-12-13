@@ -33,12 +33,15 @@ export default function Home() {
   const [TurnaroundTime, setTurnaroundTime] = useState([])
   const [WaitTime, setWaitTime] = useState([])
   const [ResponseTime, setResponseTime] = useState([])
+  const [variance, setVariance] = useState(0)
 
   const [avgTurnaroundTime, setavgTurnaroundTime] = useState(0)
   const [avgWaitTime, setavgWaitTime] = useState(0)
   const [avgResponseTime, setavgResponseTime] = useState(0)
 
-  const [MM1tableGenerated, setMM1tableGenerated] = useState(false)
+  const [MMCtableGenerated, setMMCtableGenerated] = useState(false)
+  const [MGCtableGenerated, setMGCtableGenerated] = useState(false)
+  const [GGCtableGenerated, setGGCtableGenerated] = useState(false)
 
   const [utilizationFactor, setutilizationFactor] = useState(0)
   const [avgTimeInSystem, setavgTimeInSystem] = useState(0)
@@ -84,6 +87,37 @@ export default function Home() {
     saveValues()
   }
 
+  function poissonPDF(x, lambda) {
+    // Ensure non-negative x and lambda
+    if (x < 0 || lambda <= 0) {
+      return 0
+    }
+    // Calculate the factorial of x
+    const factorialX =
+      Math.exp(x * Math.log(x) - x - Math.log(2 * Math.PI)) *
+      Math.sqrt(2 * Math.PI * x)
+    // Calculate the PDF
+    return (Math.pow(lambda, x) * Math.exp(-lambda)) / factorialX
+  }
+
+  function expPDF(x, lambda) {
+    // Ensure non-negative x and lambda
+    if (x < 0 || lambda <= 0) {
+      return 0
+    }
+    // Calculate the PDF
+    return lambda * Math.exp(-lambda * x)
+  }
+
+  function uniformPDF(x, min, max) {
+    // Ensure valid range
+    if (x < min || x > max) {
+      return 0
+    }
+    // Calculate the PDF
+    return 1 / (max - min)
+  }
+
   const saveValues = async () => {
     return new Promise((resolve, reject) => {
       const lambda = parseFloat(arrivalRate)
@@ -93,15 +127,75 @@ export default function Home() {
       const calculatedCpValues = []
       const calculatedCpLookupTable = []
 
-      while (cumulativeProbability < 0.9999999) {
-        const factorial = calculateFactorial(x)
-        const probability =
-          (Math.exp(-lambda) * Math.pow(lambda, x)) / factorial
-        cumulativeProbability += probability
-        calculatedCpValues.push({ x, cumulativeProbability })
-        calculatedCpLookupTable.push(cumulativeProbability)
+      // function expCDF(x, lambda) {
+      //   // Ensure non-negative x and lambda
+      //   if (x < 0 || lambda <= 0) {
+      //     return 0
+      //   }
+      //   // Calculate the CDF
+      //   return 1 - Math.exp(-lambda * x)
+      // }
 
-        x++
+      // function poissonCDF(x, lambda) {
+      //   // Ensure non-negative x and lambda
+      //   if (x < 0 || lambda <= 0) {
+      //     return 0
+      //   }
+      //   // Calculate the factorial of x
+      //   const factorialX = calculateFactorial(x)
+
+      //   // Sum the probability terms for k from 0 to x
+      //   let sum = 0
+      //   for (let k = 0; k <= x; k++) {
+      //     sum += (Math.pow(lambda, k) * Math.exp(-lambda)) / factorialX
+      //   }
+      //   return sum
+      // }
+
+      // function uniformCDF(x, min, max) {
+      //   // Ensure valid range
+      //   if (x < min || x > max) {
+      //     return 0
+      //   }
+      //   return (x - min) / (max - min)
+      // }
+
+      if (modelType == 1) {
+        console.log("m/m/c model")
+        while (cumulativeProbability < 0.9999999) {
+          const factorial = calculateFactorial(x)
+
+          const probability =
+            (Math.exp(-lambda) * Math.pow(lambda, x)) / factorial
+
+          cumulativeProbability += probability
+          calculatedCpValues.push({ x, cumulativeProbability })
+          calculatedCpLookupTable.push(cumulativeProbability)
+
+          x++
+        }
+      } else if (modelType == 2) {
+        console.log("m/g/c model")
+        while (cumulativeProbability < 0.9999999) {
+          const probability = 1 - Math.exp(-lambda * x)
+
+          cumulativeProbability += probability
+          calculatedCpValues.push({ x, cumulativeProbability })
+          calculatedCpLookupTable.push(cumulativeProbability)
+
+          x++
+        }
+      } else if (modelType == 3) {
+        console.log("g/g/c model")
+        while (cumulativeProbability < 0.9999999) {
+          const probability = 1 / (maxValue - minValue)
+
+          cumulativeProbability += probability
+          calculatedCpValues.push({ x, cumulativeProbability })
+          calculatedCpLookupTable.push(cumulativeProbability)
+
+          x++
+        }
       }
 
       calculatedCpLookupTable.unshift(0)
@@ -151,21 +245,6 @@ export default function Home() {
       // console.log("randomR", U)
       const interArrivalTime = -Math.log(U) / arrivalRate
       iATimeRandom.push(interArrivalTime)
-      // console.log("interArrivalTime ", interArrivalTime)
-      // const upperBoundIndex = cpLookupTable.findIndex(
-      //   value => value >= interArrivalTime
-      // )
-      // console.log("upperBoundIndex", upperBoundIndex)
-
-      // // Select the upper bound value from cpLookupTable
-      // const selectedUpperBound = cpLookupTable[upperBoundIndex]
-      // // console.log("selectedUpperBound", selectedUpperBound)
-
-      // let result
-
-      // if (upperBoundIndex > 0) {
-      //   result = cpValues[upperBoundIndex].x
-      // }
 
       // console.log("result", result)
       const findIndexInRange = (value, lowerBoundArray, upperBoundArray) => {
@@ -268,7 +347,7 @@ export default function Home() {
     setendTime(End_Time)
     setResponseTime(response_Time)
     generateTableData()
-    setMM1tableGenerated(true)
+    setMMCtableGenerated(true)
 
     // Calculate Utilization Factor (ρ)
     const utilizationFactor = parseFloat(arrivalRate) / parseFloat(serviceRate)
@@ -348,9 +427,6 @@ export default function Home() {
     const turnaround_Time = []
     const wait_Time = []
     const response_Time = []
-    let currentTime = 0
-    let totalWaitTime = 0
-    let totalTurnaroundTime = 0
 
     const lambda = parseFloat(arrivalRate)
     const meu = parseFloat(serviceRate)
@@ -433,31 +509,236 @@ export default function Home() {
     }
     setServiceTimes(serTime)
 
-    // let startTime = 0
-    // for (let i = 0; i < cpLookupTable.length - 1; i++) {
+    function mmcSchedule(arrivalTimes, serviceTimes, numServers) {
+      // Validate input
+      if (
+        !Array.isArray(arrivalTimes) ||
+        !Array.isArray(serviceTimes) ||
+        arrivalTimes.length !== serviceTimes.length ||
+        numServers <= 0
+      ) {
+        throw new Error(
+          "Invalid input: arrivalTimes and serviceTimes must be arrays of equal length, and numServers must be a positive number."
+        )
+      }
 
-    //   const r1 = startTime + serTime[i]
+      // Initialize variables
+      const serverBusyTimes = new Array(numServers).fill(0) // Array to store server busy times
+      const customerTimes = [] // Array to store customer start/end times and additional metrics
 
-    //   const r2 = End_Time[i] - ArrivalTimes[i]
-    //   start_Time.push(startTime)
-    //   End_Time.push(r1)
-    //   turnaround_Time.push(r2 > 0 ? r2 : -r2)
-    //   wait_Time.push(r3 > 0 ? r3 : -r3)
-    //   response_Time.push(r4 > 0 ? r4 : -r4)
+      // Loop through each customer
+      for (let i = 0; i < cpLookupTable.length - 1; i++) {
+        const arrivalTime = arrivalTimes[i]
+        const serviceTime = serviceTimes[i]
 
-    //   const r3 = startTime - ArrivalTimes[i]
+        // Find the first available server
+        const availableServer = serverBusyTimes.reduce(
+          (minIndex, serverTime, index) =>
+            serverTime < serverBusyTimes[minIndex] ? index : minIndex,
+          0
+        )
 
-    //   const r4 = wait_Time[i] + serTime[i]
+        // Calculate start and end times for the customer
+        const startTime = Math.max(
+          arrivalTime,
+          serverBusyTimes[availableServer]
+        )
+        const endTime = startTime + serviceTime
 
-    //   totalWaitTime += wait_Time[i]
-    //   totalTurnaroundTime += turnaround_Time[i]
+        // Calculate response time (time from arrival to start of service)
+        const responseTime = startTime - arrivalTime
 
-    //   TotalTurnaround += turnaround_Time[i]
-    //   TotalResponseTime += response_Time[i]
-    //   TotalWaitTime += wait_Time[i]
+        // Calculate waiting time (time spent waiting in queue)
+        const waitingTime = responseTime - arrivalTime
 
-    //   startTime = End_Time[i]
-    // }
+        // Calculate turnaround time (time from arrival to completion)
+        const turnaroundTime = endTime - arrivalTime
+
+        // Update server busy time
+        serverBusyTimes[availableServer] = endTime
+
+        start_Time.push(startTime)
+        End_Time.push(endTime)
+        turnaround_Time.push(
+          turnaroundTime > 0 ? turnaroundTime : -turnaroundTime
+        )
+        wait_Time.push(waitingTime > 0 ? waitingTime : -waitingTime)
+        response_Time.push(responseTime > 0 ? responseTime : -responseTime)
+
+        TotalTurnaround += turnaroundTime > 0 ? turnaroundTime : -turnaroundTime
+        TotalResponseTime += responseTime > 0 ? responseTime : -responseTime
+        TotalWaitTime += waitingTime > 0 ? waitingTime : -waitingTime
+        // Add customer times and metrics to array
+        customerTimes.push({
+          startTime,
+          endTime,
+          responseTime,
+          waitingTime,
+          turnaroundTime,
+        })
+      }
+
+      return customerTimes
+    }
+
+    const customerTimes = mmcSchedule(arrivalTimes, serviceTimes, servers)
+
+    const AvgTurnaround = TotalTurnaround / (cpLookupTable.length - 1)
+    const AvgResponse = TotalResponseTime / (cpLookupTable.length - 1)
+    const AvgWaitTime = TotalWaitTime / (cpLookupTable.length - 1)
+    setavgTurnaroundTime(AvgTurnaround)
+    setavgResponseTime(AvgResponse)
+    setavgWaitTime(AvgWaitTime)
+
+    setstartTimes(start_Time)
+    setWaitTime(wait_Time)
+    setTurnaroundTime(turnaround_Time)
+    setendTime(End_Time)
+    setResponseTime(response_Time)
+    generateTableData()
+    setMMCtableGenerated(true)
+
+    function mmcMetrics(arrivalRate, serviceRate, numServers) {
+      // Validate input
+      if (arrivalRate <= 0 || serviceRate <= 0 || numServers <= 0) {
+        throw new Error(
+          "Invalid input: arrivalRate, serviceRate, and numServers must be positive values."
+        )
+      }
+
+      const lambda = arrivalRate // Arrival rate
+      const mu = serviceRate // Service rate
+      const c = numServers // Number of servers
+
+      // Calculate intermediate values
+      const c2 = c * c
+      const cmu = c * mu
+      const lambda2 = lambda * lambda
+
+      // Performance measures
+      const Lq = (lambda * (c2 - c)) / (cmu - lambda2 + 2 * cmu) // Average queue length
+      const L = lambda / (cmu - lambda2) // Average system length
+      const W = L / lambda // Average time in system
+      const Wq = Lq / lambda // Average waiting time
+      const rho = lambda / cmu // Utilization factor
+      const eta = 1 - rho // Idle factor
+
+      return {
+        Lq,
+        L,
+        W,
+        Wq,
+        rho,
+        eta,
+      }
+    }
+
+    const metrics = mmcMetrics(
+      parseFloat(arrivalRate),
+      parseFloat(serviceRate),
+      servers
+    )
+    console.log("Average queue length:", metrics.Lq)
+    setavgCustomersInQueue(metrics.Lq)
+    console.log("Average system length:", metrics.L)
+    setavgCustomersInSystem(metrics.L)
+    console.log("Average time in system:", metrics.W)
+    setavgTimeInSystem(metrics.W)
+    console.log("Average waiting time:", metrics.Wq)
+    setavgTimeInQueue(metrics.Wq)
+    console.log("Utilization factor:", metrics.rho)
+    setutilizationFactor(metrics.rho)
+    console.log("Idle factor:", metrics.eta)
+    setIdle(metrics.eta)
+  }
+
+  const M_G_1_Table = async () => {
+    const start_Time = []
+    const End_Time = []
+    const turnaround_Time = []
+    const wait_Time = []
+    const response_Time = []
+
+    const lambda = parseFloat(arrivalRate)
+    const meu = parseFloat(serviceRate)
+    if (isNaN(lambda) || lambda <= 0) {
+      alert("Please enter a valid positive arrival rate (λ).")
+      return
+    }
+
+    if (lambda >= meu) {
+      alert("Please enter arrival rate (λ) less than mew (u).")
+      return
+    }
+
+    const iATime = []
+    const iATimeRandom = []
+    let previousArrivalTime = 0
+    iATime.push(0)
+    iATimeRandom.push(0)
+    for (let i = 0; i < cpLookupTable.length - 1; i++) {
+      AvgTime.push(i)
+    }
+
+    for (let i = 0; i < cpLookupTable.length - 2; i++) {
+      const length = cpLookupTable.length - 2
+      // const randomR = Math.round(Math.random() * length)
+      const U = Math.random()
+      // console.log("randomR", U)
+      const interArrivalTime = -Math.log(U) / arrivalRate
+      iATimeRandom.push(interArrivalTime)
+
+      const findIndexInRange = (value, lowerBoundArray, upperBoundArray) => {
+        // console.log("upperBoundArray.length-1", upperBoundArray.length-1)
+        console.log("lowerBoundArray[i]", lowerBoundArray[i])
+        console.log(
+          "upperBoundArray[i]",
+          upperBoundArray[i].cumulativeProbability
+        )
+        // console.log("value", value)
+        for (let i = 0; i < upperBoundArray.length - 1; i++) {
+          if (
+            value >= lowerBoundArray[i] &&
+            value < upperBoundArray[i].cumulativeProbability
+          ) {
+            return i // Return the index of the upper bound of the range
+          }
+        }
+        // // If the value is greater than or equal to the last upper bound, return the last index
+        return upperBoundArray.length - 1
+      }
+      const index = findIndexInRange(interArrivalTime, cpLookupTable, cpValues)
+      console.log(" index ", index)
+
+      iATime.push(index)
+    }
+    setInterArrivalTimes(iATime)
+    setInterArrivalTimesRand(iATimeRandom)
+
+    const ArrivalTimes = await Promise.all(
+      iATime.map(async value => {
+        const currentInterArrivalTime = value
+        const arrival_Time = previousArrivalTime + currentInterArrivalTime
+        previousArrivalTime = arrival_Time
+        return arrival_Time
+      })
+    )
+
+    setArrivalTimes(ArrivalTimes)
+
+    const serTime = []
+    let TotalTurnaround = 0
+    let TotalWaitTime = 0
+    let TotalResponseTime = 0
+
+    for (let i = 0; i < cpLookupTable.length - 1; i++) {
+      const length = cpLookupTable.length - 1
+
+      const randomR = Math.round(Math.random() * length)
+
+      serTime.push(randomR)
+    }
+    setServiceTimes(serTime)
 
     function mmcSchedule(arrivalTimes, serviceTimes, numServers) {
       // Validate input
@@ -531,22 +812,7 @@ export default function Home() {
       return customerTimes
     }
 
-    //     const arrivalTimes = [0, 1, 2.5, 4, 5.2];
-    // const serviceTimes = [2, 1.5, 3, 2.2, 1.8];
-    // const numServers = 2;
-
     const customerTimes = mmcSchedule(arrivalTimes, serviceTimes, servers)
-
-    console.log("Customer times:")
-    customerTimes.forEach(customerTime => {
-      console.log(
-        `\tCustomer: Start time: ${customerTime.startTime}, End time: ${customerTime.endTime}, Response time: ${customerTime.responseTime}, Waiting time: ${customerTime.waitingTime}, Turnaround time: ${customerTime.turnaroundTime}`
-      )
-    })
-
-    // console.log("TotalTurnaround", TotalTurnaround)
-    // console.log("TotalResponseTime", TotalResponseTime)
-    // console.log("TotalWaitTime ", TotalWaitTime)
 
     const AvgTurnaround = TotalTurnaround / (cpLookupTable.length - 1)
     const AvgResponse = TotalResponseTime / (cpLookupTable.length - 1)
@@ -561,48 +827,63 @@ export default function Home() {
     setendTime(End_Time)
     setResponseTime(response_Time)
     generateTableData()
-    setMM1tableGenerated(true)
+    setMGCtableGenerated(true)
 
-    function mmcMetrics(arrivalRate, serviceRate, numServers) {
+    function mgcMetrics(
+      arrivalRate,
+      serviceRate,
+      serviceMin,
+      serviceMax,
+      numServers
+    ) {
       // Validate input
-      if (arrivalRate <= 0 || serviceRate <= 0 || numServers <= 0) {
+      if (
+        arrivalRate <= 0 ||
+        serviceMin >= serviceMax ||
+        serviceMin <= 0 ||
+        numServers <= 0
+      ) {
         throw new Error(
-          "Invalid input: arrivalRate, serviceRate, and numServers must be positive values."
+          "Invalid input: arrivalRate, serviceMin, serviceMax, and numServers must be positive values with serviceMin < serviceMax."
         )
       }
-
-      const lambda = arrivalRate // Arrival rate
-      const mu = serviceRate // Service rate
       const c = numServers // Number of servers
+      const lambda = arrivalRate // Arrival rate
+      const rho = lambda / (c * serviceRate) // Utilization factor
+      const Variance = Math.pow(serviceMax - serviceMin, 2) / 12
 
-      // Calculate intermediate values
-      const c2 = c * c
-      const cmu = c * mu
-      const lambda2 = lambda * lambda
+      const Lq =
+        ((Math.pow(arrivalRate, 2) * Math.pow(Variance, 2) + Math.pow(rho, 2)) /
+          2) *
+        (1 - rho)
 
-      // Performance measures
-      const Lq = (lambda * (c2 - c)) / (cmu - lambda2 + 2 * cmu) // Average queue length
-      const L = lambda / (cmu - lambda2) // Average system length
-      const W = L / lambda // Average time in system
-      const Wq = Lq / lambda // Average waiting time
-      const rho = lambda / cmu // Utilization factor
+      const Wq = Lq / arrivalRate
+      const W = Wq + 1 / serviceRate
+
+      const L = Lq + lambda * W
+      // Lq variance using Pollaczek-Khinchin formula
+      // const LqVariance = Lq * (1 + rho * (rho * (c * mu * sigma2 + 2 * lambda * sigma2) + lambda * lambda)) / (1 - rho) * (1 - rho);
       const eta = 1 - rho // Idle factor
-
       return {
-        Lq,
-        L,
+        Variance,
+        rho,
         W,
         Wq,
-        rho,
+        L,
+        Lq,
         eta,
       }
     }
 
-    const metrics = mmcMetrics(
+    const metrics = mgcMetrics(
       parseFloat(arrivalRate),
       parseFloat(serviceRate),
+      minValue,
+      maxValue,
       servers
     )
+    console.log("Variance:", metrics.Variance)
+    setVariance(metrics.Variance)
     console.log("Average queue length:", metrics.Lq)
     setavgCustomersInQueue(metrics.Lq)
     console.log("Average system length:", metrics.L)
@@ -616,7 +897,6 @@ export default function Home() {
     console.log("Idle factor:", metrics.eta)
     setIdle(metrics.eta)
   }
-
   return (
     <div className=" flex flex-col  justify-center items-center space-y-8 mt-4">
       <div className=" justify-center">
@@ -769,9 +1049,10 @@ export default function Home() {
               <>
                 <div className="flex">
                   <StyledButton
-                    onClick={() => {
-                      console.log("M/G/1")
-                    }}
+                    // onClick={() => {
+                    //   console.log("M/G/1")
+                    // }}
+                    onClick={M_G_1_Table}
                     color="#004021"
                     background="#076638"
                   >
@@ -783,9 +1064,10 @@ export default function Home() {
               <>
                 <div className="flex">
                   <StyledButton
-                    onClick={() => {
-                      console.log("M/G/C")
-                    }}
+                    // onClick={() => {
+                    //   console.log("M/G/C")
+                    // }}
+                    onClick={M_G_1_Table}
                     color="#004021"
                     background="#076638"
                   >
@@ -798,7 +1080,7 @@ export default function Home() {
         </>
       )}
 
-      {MM1tableGenerated && modelType == 1 && servers > 0 && (
+      {MMCtableGenerated && modelType == 1 && servers > 0 && (
         <div>
           <div className=" flex w-full  text-3xl  font-bold  justify-center items-center">
             M/M/{servers} TABLE
@@ -945,10 +1227,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* {MM1tableGenerated && servers > 1 && (
+      {MGCtableGenerated && modelType == 2 && servers > 0 && (
         <div>
           <div className=" flex w-full  text-3xl  font-bold  justify-center items-center">
-            M/M/{servers} TABLE
+            M/G/{servers} TABLE
           </div>
           <table className=" w-[90vw] mt-4 mb-7">
             <thead>
@@ -960,7 +1242,158 @@ export default function Home() {
                 </th>
                 <th className=" text-white  px-4">Avg Time Between Arrivals</th>
                 <th className=" text-white  px-4">Rand No</th>
+                <th className=" text-white  px-4">Inter Arrival Time</th>
+                <th className=" text-white  px-4">Arrival Time</th>
+                <th className=" text-white  px-4">Service Time</th>
+                <th className=" text-white  px-4">Start Time</th>
+                <th className=" text-white  px-4">End Time</th>
+                <th className=" text-white  px-4">Turnaround Time</th>
+                <th className=" text-white  px-4">Waiting Time</th>
+                <th className=" text-white  px-4">Response Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cpValues.map((value, index) => (
+                <tr key={index}>
+                  <td className="  px-4">{value.x + 1}</td>
+                  <td className="  px-4">{cpLookupTable[index].toFixed(6)}</td>
+                  <td className="  px-4">
+                    {value.cumulativeProbability.toFixed(6)}
+                  </td>
+                  <td className="  px-4">{value.x}</td>
+                  <td className="  px-4">
+                    {interArrivalTimesRand[index].toFixed(4)}
+                  </td>
+                  <td className="  px-4">{interArrivalTimes[index] || 0}</td>
+                  <td className="  px-4">{arrivalTimes[index] || 0}</td>
+                  <td className="  px-4">{serviceTimes[index] || 1}</td>
 
+                  <td
+                    className={`px-4 ${
+                      startTimes[index] < 0 ? "text-red-500" : ""
+                    }`}
+                  >
+                    {startTimes[index] || 0}
+                  </td>
+                  <td
+                    className={`px-4 ${
+                      endTime[index] < 0 ? "text-red-500" : "text-black"
+                    }`}
+                  >
+                    {endTime[index] || 1}
+                  </td>
+                  <td
+                    className={`px-4 ${
+                      TurnaroundTime[index] < 0 ? "text-red-500" : ""
+                    }`}
+                  >
+                    {TurnaroundTime[index] || 0}
+                  </td>
+                  <td
+                    className={`px-4 ${
+                      WaitTime[index] < 0 ? "text-red-500" : ""
+                    }`}
+                  >
+                    {WaitTime[index] || 1}
+                  </td>
+                  <td
+                    className={`px-4 ${
+                      ResponseTime[index] < 0 ? "text-red-500" : ""
+                    }`}
+                  >
+                    {ResponseTime[index] || 1}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div>
+            <table className="w-full mt-4 mb-7 text-left">
+              <tr>
+                <th className="text-left text-white px-4">Metric</th>
+                <th className="text-white px-4">Value</th>
+              </tr>
+              <tr>
+                <td className="text-left px-4"> Utilization Factor (ρ)</td>
+                <td className="px-4">{utilizationFactor.toFixed(2) * 100} %</td>
+              </tr>
+              <tr>
+                <td className="text-left px-4"> Variance</td>
+                <td className="px-4">{variance.toFixed(4)} </td>
+              </tr>
+
+              <tr>
+                <td className="text-left px-4">
+                  {" "}
+                  Average Time a Customer Spends in the System (W){" "}
+                </td>
+                <td className="px-4">{avgTimeInSystem.toFixed(3)}</td>
+              </tr>
+              <tr>
+                <td className="text-left px-4">
+                  {" "}
+                  Average Time a Customer Spends Waiting in the Queue (Wq){" "}
+                </td>
+                <td className="px-4">{avgTimeInQueue.toFixed(3)}</td>
+              </tr>
+              <tr>
+                <td className="text-left px-4">
+                  {" "}
+                  Average Number of Customers in the Queue (Lq){" "}
+                </td>
+                <td className="px-4">{avgCustomersInQueue.toFixed(3)}</td>
+              </tr>
+              <tr>
+                <td className="text-left px-4">
+                  {" "}
+                  Average Number of Customers in the System (L){" "}
+                </td>
+                <td className="px-4">{avgCustomersInSystem.toFixed(3)}</td>
+              </tr>
+
+              <tr>
+                <td className="text-left px-4">
+                  {" "}
+                  Proportion of time the server is idle (Idle){" "}
+                </td>
+                <td className="px-4">{Idle.toFixed(2) * 100} %</td>
+              </tr>
+
+              <tr>
+                <td className="text-left px-4"> Average Turnaround Time</td>
+                <td className="px-4">{avgTurnaroundTime.toFixed(3)}</td>
+              </tr>
+
+              <tr>
+                <td className="text-left px-4"> Average Response Time</td>
+                <td className="px-4">{avgResponseTime.toFixed(3)}</td>
+              </tr>
+
+              <tr>
+                <td className="text-left px-4"> Average Waiting Time</td>
+                <td className="px-4">{avgWaitTime.toFixed(3)}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {GGCtableGenerated && modelType == 1 && servers > 0 && (
+        <div>
+          <div className=" flex w-full  text-3xl  font-bold  justify-center items-center">
+            G/G/{servers} TABLE
+          </div>
+          <table className=" w-[90vw] mt-4 mb-7">
+            <thead>
+              <tr>
+                <th className=" text-white  px-4 ">S.no#</th>
+                <th className=" text-white  px-4">Cp Lookup</th>
+                <th className=" text-white  px-4">
+                  Cumulative Probability (Cp)
+                </th>
+                <th className=" text-white  px-4">Avg Time Between Arrivals</th>
+                <th className=" text-white  px-4">Rand No</th>
                 <th className=" text-white  px-4">Inter Arrival Time</th>
                 <th className=" text-white  px-4">Arrival Time</th>
                 <th className=" text-white  px-4">Service Time</th>
@@ -1091,7 +1524,7 @@ export default function Home() {
             </table>
           </div>
         </div>
-      )} */}
+      )}
     </div>
   )
 }
