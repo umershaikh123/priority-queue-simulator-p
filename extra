@@ -17,7 +17,30 @@ import {
 
 import StyledButton from "@/components/Button"
 import CssTextField from "@/components/TextField"
+// useEffect(() => {
+    //   const data = calculateQueueLength(customers) // Function to convert customer data to D3 format
+    //   // setQueueLengthData(data);
 
+    //   const svg = d3.select(svgRef.current)
+
+    //   const xScale = d3.scaleTime().domain(d3.extent(data, d => d.timestamp))
+    //   const yScale = d3
+    //     .scaleLinear()
+    //     .domain(d3.extent(data, d => d.queueLength))
+
+    //   const linePath = d3
+    //     .line()
+    //     .x(d => xScale(d.timestamp))
+    //     .y(d => yScale(d.queueLength))
+
+    //   svg
+    //     .append("path")
+    //     .attr("d", linePath(data))
+    //     .attr("stroke", "blue")
+    //     .attr("fill", "none")
+
+    //   // Add axes, labels, and other visual elements
+    // }, [customers])
 // const PriorityTable = ({ A, a, b, z0, M, C, Length }) => {
 //   const [tableData, setTableData] = useState([])
 //   const [priority, setpriority] = useState([])

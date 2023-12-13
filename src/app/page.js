@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import {
   Button,
   FormGroup,
@@ -17,6 +17,7 @@ import {
 
 import StyledButton from "@/components/Button"
 import CssTextField from "@/components/TextField"
+import * as d3 from "d3"
 
 export default function Home() {
   const [arrivalRate, setArrivalRate] = useState(0)
@@ -33,6 +34,7 @@ export default function Home() {
   const [TurnaroundTime, setTurnaroundTime] = useState([])
   const [WaitTime, setWaitTime] = useState([])
   const [ResponseTime, setResponseTime] = useState([])
+  const [Customers, setCustomers] = useState([])
   const [variance, setVariance] = useState(0)
 
   const [avgTurnaroundTime, setavgTurnaroundTime] = useState(0)
@@ -62,6 +64,151 @@ export default function Home() {
   const [minValue, setminValue] = useState(1)
   const [maxValue, setmaxValue] = useState(1)
 
+  function prepareGanttData(customers) {
+    return customers.map(customer => {
+      return {
+        customerNo: customer.customerNo,
+        StartTime: customer.StartTime,
+        EndTime: customer.EndTime,
+        TurnaroundTime: customer.TurnaroundTime,
+        WaitTime: customer.WaitTime,
+        ResponseTime: customer.ResponseTime,
+      }
+    })
+  }
+
+  function QueueLengthViz({ customers }) {
+    const svgRef = useRef(null)
+    const [queueLengthData, setQueueLengthData] = useState([])
+
+    useEffect(() => {
+      // D3.js code for visualization
+      const svg = d3.select(svgRef.current)
+
+      const data = customers // Format customer data for chart
+      console.log("data", data)
+
+      // Set up scales based on the data
+      const xScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(data, d => d.EndTime)])
+        .range([0, 1000])
+
+      const yScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(data, d => d.EndTime)])
+        .range([500, 0])
+
+      // Draw rectangles representing customers
+      svg
+        .selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", (d, i) => xScale(d.StartTime))
+
+        .attr("y", d => yScale(d.EndTime)) // Rectangles now start at EndTime
+        .attr("width", d => xScale(d.EndTime) - xScale(d.StartTime) + 100)
+        .attr("height", d => yScale(d.StartTime) - yScale(d.EndTime) + 50)
+        // .attr("width", d => 100)
+        // .attr("height", d => 50)
+        .attr("fill", () => getRandomColor())
+
+      // Add labels for customer numbers
+      svg
+        .selectAll("text")
+        .data(data)
+        .enter()
+        .append("text")
+        // .attr("x", d => (xScale(d.StartTime) + xScale(d.EndTime)) / 2)
+        // .attr("y", d => (yScale(d.EndTime) + yScale(d.StartTime)) / 2)
+        .attr("x", d => xScale(d.StartTime) + 50)
+        .attr("y", d => yScale(d.EndTime) + 25)
+        // .attr("x", (d, i) => (xScale(d.StartTime) + xScale(d.EndTime)) / 2)
+        // .attr("y", d => (yScale(d.EndTime) + yScale(d.StartTime)) / 2)
+
+        .attr("fill", "white")
+        .text(d => `C${d.customerNo}`)
+
+      // Add axes if needed
+      const xAxis = d3.axisBottom(xScale)
+      const yAxis = d3.axisLeft(yScale)
+
+      svg.append("g").attr("transform", `translate(0, ${600})`).call(xAxis)
+
+      svg.append("g").attr("transform", `translate(0, ${100})`).call(yAxis)
+      // Add Y-axis labels
+      svg
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0)
+        .attr("x", -350) // Adjust the position based on your needs
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Time")
+      // svg.append("g").call(yAxis)
+    }, [customers])
+    const getRandomColor = () => {
+      // Generate a random color in hexadecimal format
+      return `#${Math.floor(Math.random() * 16777215).toString(16)}`
+    }
+    const calculateYPosition = (data, index, yScale) => {
+      const overlappingThreshold = 2 // Adjust as needed
+
+      if (index === 0) {
+        return yScale(data[index].EndTime)
+      }
+
+      const previousEnd = data[index - 1].EndTime
+      const currentStart = data[index].StartTime
+
+      return Math.max(
+        yScale(previousEnd) + overlappingThreshold,
+        yScale(currentStart)
+      )
+    }
+
+    // useEffect(() => {
+    //   // const data = prepareGanttData(customers) // Format customer data for chart
+
+    //   const Customers = [
+    //     { startTime: 1, endTime: 3, category: "A" },
+    //     { startTime: 5, endTime: 8, category: "B" },
+    //     { startTime: 10, endTime: 12, category: "A" },
+    //     { startTime: 15, endTime: 17, category: "C" },
+    //   ]
+    //   const data = Customers
+    //   console.log("data ", data)
+    //   console.log("customers ", customers)
+
+    //   const svg = d3.select(svgRef.current)
+
+    //   const xScale = d3.scaleTime().domain(d3.extent(data, d => d.startTime))
+    //   const yScale = d3.scaleBand().domain(data.map(d => d.category)) // Adjust for categories
+
+    //   const xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%H:%M"))
+
+    //   svg.append("g").attr("transform", "translate(0, 10)").call(xAxis)
+
+    //   svg
+    //     .selectAll("rect")
+    //     .data(data)
+    //     .enter()
+    //     .append("rect")
+    //     .attr("x", d => xScale(d.startTime))
+    //     .attr("y", d => yScale(d.category))
+    //     .attr("width", d => xScale(d.endTime) - xScale(d.startTime))
+    //     .attr("height", yScale.bandwidth())
+    //     .style("fill", "#e0e0e0") // Adjust fill color
+    // }, [Customers])
+
+    return (
+      <div>
+        <svg ref={svgRef} width={1000} height={1000} className=" ml-11" />
+      </div>
+    )
+  }
   const handleModelChange = event => {
     setModelType(event.target.value)
   }
@@ -177,7 +324,7 @@ export default function Home() {
       } else if (modelType == 2) {
         console.log("m/g/c model")
         while (cumulativeProbability < 0.9999999) {
-          const probability = 1 - Math.exp(-lambda * x)
+          const probability = lambda * Math.exp(-lambda * x)
 
           cumulativeProbability += probability
           calculatedCpValues.push({ x, cumulativeProbability })
@@ -289,6 +436,7 @@ export default function Home() {
     setArrivalTimes(ArrivalTimes)
 
     const serTime = []
+    const customer = []
     let TotalTurnaround = 0
     let TotalWaitTime = 0
     let TotalResponseTime = 0
@@ -306,6 +454,7 @@ export default function Home() {
     setServiceTimes(serTime)
 
     let startTime = 0
+    let index = 2
     for (let i = 0; i < cpLookupTable.length - 1; i++) {
       start_Time.push(startTime)
 
@@ -329,7 +478,17 @@ export default function Home() {
       TotalWaitTime += wait_Time[i]
 
       startTime = End_Time[i]
+      customer.push({
+        customerNo: index + i,
+        StartTime: startTime,
+        EndTime: r1,
+        TurnaroundTime: r2,
+        WaitTime: r3,
+        ResponseTime: r4,
+      })
     }
+
+    setCustomers(customer)
     // console.log("TotalTurnaround", TotalTurnaround)
     // console.log("TotalResponseTime", TotalResponseTime)
     // console.log("TotalWaitTime ", TotalWaitTime)
@@ -1160,7 +1319,9 @@ export default function Home() {
               ))}
             </tbody>
           </table>
-
+          <div className="border-2">
+            <QueueLengthViz customers={Customers} />
+          </div>
           <div>
             <table className="w-full mt-4 mb-7 text-left">
               <tr>
