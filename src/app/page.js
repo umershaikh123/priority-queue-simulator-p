@@ -961,7 +961,7 @@ export default function Home() {
               >
                 <MenuItem value={1}>M/M/C</MenuItem>
                 <MenuItem value={2}>M/G/C</MenuItem>
-                <MenuItem value={3}>G/G/C</MenuItem>
+                {/* <MenuItem value={3}>G/G/C</MenuItem> */}
               </Select>
             </FormControl>
           </Box>
