@@ -168,7 +168,6 @@ export default function Home() {
       // }
 
       // console.log("result", result)
-
       const findIndexInRange = (value, lowerBoundArray, upperBoundArray) => {
         // console.log("upperBoundArray.length-1", upperBoundArray.length-1)
         console.log("lowerBoundArray[i]", lowerBoundArray[i])
@@ -188,7 +187,6 @@ export default function Home() {
         // // If the value is greater than or equal to the last upper bound, return the last index
         return upperBoundArray.length - 1
       }
-
       const index = findIndexInRange(interArrivalTime, cpLookupTable, cpValues)
       console.log(" index ", index)
       // console.log("-Math.log(randomR)", -Math.log(randomR))
@@ -217,11 +215,14 @@ export default function Home() {
     let TotalResponseTime = 0
 
     for (let i = 0; i < cpLookupTable.length - 1; i++) {
-      const length = cpLookupTable.length
+      const length = cpLookupTable.length - 1
 
-      const randomR = Math.round(Math.random() * length) // Generate a random number between 0 and 1
+      const randomR = Math.round(Math.random() * length)
 
-      serTime.push(Math.round(randomR))
+      // console.log("randomR", U)
+      // const serviceTime = -Math.log(U) / serviceRate
+
+      serTime.push(randomR)
     }
     setServiceTimes(serTime)
 
@@ -340,6 +341,196 @@ export default function Home() {
 
     setTableData(data)
   }
+
+  const M_M_C_Table = async () => {
+    const start_Time = []
+    const End_Time = []
+    const turnaround_Time = []
+    const wait_Time = []
+    const response_Time = []
+    let currentTime = 0
+    let totalWaitTime = 0
+    let totalTurnaroundTime = 0
+
+    const lambda = parseFloat(arrivalRate)
+    const meu = parseFloat(serviceRate)
+    if (isNaN(lambda) || lambda <= 0) {
+      alert("Please enter a valid positive arrival rate (λ).")
+      return
+    }
+
+    if (lambda >= meu) {
+      alert("Please enter arrival rate (λ) less than mew (u).")
+      return
+    }
+
+    const iATime = []
+    const iATimeRandom = []
+    let previousArrivalTime = 0
+    iATime.push(0)
+    iATimeRandom.push(0)
+    for (let i = 0; i < cpLookupTable.length - 1; i++) {
+      AvgTime.push(i)
+    }
+
+    for (let i = 0; i < cpLookupTable.length - 2; i++) {
+      const length = cpLookupTable.length - 2
+      // const randomR = Math.round(Math.random() * length)
+      const U = Math.random()
+      // console.log("randomR", U)
+      const interArrivalTime = -Math.log(U) / arrivalRate
+      iATimeRandom.push(interArrivalTime)
+
+      const findIndexInRange = (value, lowerBoundArray, upperBoundArray) => {
+        // console.log("upperBoundArray.length-1", upperBoundArray.length-1)
+        console.log("lowerBoundArray[i]", lowerBoundArray[i])
+        console.log(
+          "upperBoundArray[i]",
+          upperBoundArray[i].cumulativeProbability
+        )
+        // console.log("value", value)
+        for (let i = 0; i < upperBoundArray.length - 1; i++) {
+          if (
+            value >= lowerBoundArray[i] &&
+            value < upperBoundArray[i].cumulativeProbability
+          ) {
+            return i // Return the index of the upper bound of the range
+          }
+        }
+        // // If the value is greater than or equal to the last upper bound, return the last index
+        return upperBoundArray.length - 1
+      }
+      const index = findIndexInRange(interArrivalTime, cpLookupTable, cpValues)
+      console.log(" index ", index)
+
+      iATime.push(index)
+    }
+    setInterArrivalTimes(iATime)
+    setInterArrivalTimesRand(iATimeRandom)
+
+    const ArrivalTimes = await Promise.all(
+      iATime.map(async value => {
+        const currentInterArrivalTime = value
+        const arrival_Time = previousArrivalTime + currentInterArrivalTime
+        previousArrivalTime = arrival_Time
+        return arrival_Time
+      })
+    )
+
+    setArrivalTimes(ArrivalTimes)
+
+    const serTime = []
+    let TotalTurnaround = 0
+    let TotalWaitTime = 0
+    let TotalResponseTime = 0
+
+    for (let i = 0; i < cpLookupTable.length - 1; i++) {
+      const length = cpLookupTable.length - 1
+
+      const randomR = Math.round(Math.random() * length)
+
+      serTime.push(randomR)
+    }
+    setServiceTimes(serTime)
+
+    let startTime = 0
+    for (let i = 0; i < cpLookupTable.length - 1; i++) {
+      start_Time.push(startTime)
+
+      const r1 = startTime + serTime[i]
+      End_Time.push(r1)
+
+      const r2 = End_Time[i] - ArrivalTimes[i]
+      turnaround_Time.push(r2 > 0 ? r2 : -r2)
+
+      const r3 = startTime - ArrivalTimes[i]
+      wait_Time.push(r3 > 0 ? r3 : -r3)
+
+      const r4 = wait_Time[i] + serTime[i]
+      response_Time.push(r4 > 0 ? r4 : -r4)
+
+      totalWaitTime += wait_Time[i]
+      totalTurnaroundTime += turnaround_Time[i]
+
+      TotalTurnaround += turnaround_Time[i]
+      TotalResponseTime += response_Time[i]
+      TotalWaitTime += wait_Time[i]
+
+      startTime = End_Time[i]
+    }
+    // console.log("TotalTurnaround", TotalTurnaround)
+    // console.log("TotalResponseTime", TotalResponseTime)
+    // console.log("TotalWaitTime ", TotalWaitTime)
+
+    const AvgTurnaround = TotalTurnaround / (cpLookupTable.length - 1)
+    const AvgResponse = TotalResponseTime / (cpLookupTable.length - 1)
+    const AvgWaitTime = TotalWaitTime / (cpLookupTable.length - 1)
+    setavgTurnaroundTime(AvgTurnaround)
+    setavgResponseTime(AvgResponse)
+    setavgWaitTime(AvgWaitTime)
+
+    setstartTimes(start_Time)
+    setWaitTime(wait_Time)
+    setTurnaroundTime(turnaround_Time)
+    setendTime(End_Time)
+    setResponseTime(response_Time)
+    generateTableData()
+    setMM1tableGenerated(true)
+
+    function mmcMetrics(arrivalRate, serviceRate, numServers) {
+      // Validate input
+      if (arrivalRate <= 0 || serviceRate <= 0 || numServers <= 0) {
+        throw new Error(
+          "Invalid input: arrivalRate, serviceRate, and numServers must be positive values."
+        )
+      }
+
+      const lambda = arrivalRate // Arrival rate
+      const mu = serviceRate // Service rate
+      const c = numServers // Number of servers
+
+      // Calculate intermediate values
+      const c2 = c * c
+      const cmu = c * mu
+      const lambda2 = lambda * lambda
+
+      // Performance measures
+      const Lq = (lambda * (c2 - c)) / (cmu - lambda2 + 2 * cmu) // Average queue length
+      const L = lambda / (cmu - lambda2) // Average system length
+      const W = L / lambda // Average time in system
+      const Wq = Lq / lambda // Average waiting time
+      const rho = lambda / cmu // Utilization factor
+      const eta = 1 - rho // Idle factor
+
+      return {
+        Lq,
+        L,
+        W,
+        Wq,
+        rho,
+        eta,
+      }
+    }
+
+    const metrics = mmcMetrics(
+      parseFloat(arrivalRate),
+      parseFloat(serviceRate),
+      servers
+    )
+    console.log("Average queue length:", metrics.Lq)
+    setavgCustomersInQueue(metrics.Lq)
+    console.log("Average system length:", metrics.L)
+    setavgCustomersInSystem(metrics.L)
+    console.log("Average time in system:", metrics.W)
+    setavgTimeInSystem(metrics.W)
+    console.log("Average waiting time:", metrics.Wq)
+    setavgTimeInQueue(metrics.Wq)
+    console.log("Utilization factor:", metrics.rho)
+    setutilizationFactor(metrics.rho)
+    console.log("Idle factor:", metrics.eta)
+    setIdle(metrics.eta)
+  }
+
   return (
     <div className=" flex flex-col  justify-center items-center space-y-8 mt-4">
       <div className=" justify-center">
@@ -445,9 +636,10 @@ export default function Home() {
             <>
               <div className="flex">
                 <StyledButton
-                  onClick={() => {
-                    console.log("M/M/C")
-                  }}
+                  // onClick={() => {
+                  //   console.log("M/M/C")
+                  // }}
+                  onClick={M_M_C_Table}
                   color="#004021"
                   background="#076638"
                 >
@@ -529,10 +721,10 @@ export default function Home() {
             <thead>
               <tr>
                 <th className=" text-white  px-4 ">S.no#</th>
+                <th className=" text-white  px-4">Cp Lookup</th>
                 <th className=" text-white  px-4">
                   Cumulative Probability (Cp)
                 </th>
-                <th className=" text-white  px-4">Cp Lookup</th>
                 <th className=" text-white  px-4">Avg Time Between Arrivals</th>
                 <th className=" text-white  px-4">Rand No</th>
                 <th className=" text-white  px-4">Inter Arrival Time</th>
@@ -549,10 +741,10 @@ export default function Home() {
               {cpValues.map((value, index) => (
                 <tr key={index}>
                   <td className="  px-4">{value.x + 1}</td>
+                  <td className="  px-4">{cpLookupTable[index].toFixed(6)}</td>
                   <td className="  px-4">
                     {value.cumulativeProbability.toFixed(6)}
                   </td>
-                  <td className="  px-4">{cpLookupTable[index].toFixed(6)}</td>
                   <td className="  px-4">{value.x}</td>
                   <td className="  px-4">
                     {interArrivalTimesRand[index].toFixed(4)}
