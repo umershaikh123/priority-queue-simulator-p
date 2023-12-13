@@ -1262,7 +1262,9 @@ export default function Home() {
                   </td>
                   <td className="  px-4">{value.x}</td>
                   <td className="  px-4">
-                    {interArrivalTimesRand[index].toFixed(4)}
+                    {interArrivalTimesRand[index] !== undefined
+                      ? interArrivalTimesRand[index].toFixed(4)
+                      : "N/A"}
                   </td>
                   <td className="  px-4">{interArrivalTimes[index] || 0}</td>
                   <td className="  px-4">{arrivalTimes[index] || 0}</td>
