@@ -8,6 +8,11 @@ import {
   TextField,
   Typography,
   Alert,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material"
 
 import StyledButton from "@/components/Button"
@@ -254,6 +259,27 @@ export default function Home() {
   const [z0, setz0] = useState(10112166)
   const [M, setM] = useState(1994)
   const [C, setC] = useState(9)
+
+  const [modelType, setModelType] = useState(1)
+  const [servers, setservers] = useState(1)
+  const [minValue, setminValue] = useState(1)
+  const [maxValue, setmaxValue] = useState(1)
+
+  const handleModelChange = event => {
+    setModelType(event.target.value)
+  }
+
+  const handleMinChange = event => {
+    setminValue(event.target.value)
+  }
+
+  const handleMaxChange = event => {
+    setmaxValue(event.target.value)
+  }
+
+  const handleServerChange = event => {
+    setservers(event.target.value)
+  }
 
   const handleA = e => {
     setA(parseFloat(e.target.value))
@@ -537,7 +563,7 @@ export default function Home() {
   return (
     <div className=" flex flex-col  justify-center items-center space-y-8 mt-4">
       <div className=" justify-center">
-        <h1 className="text-3xl font-bold text-[]">M/M/1 Priority Simulator</h1>
+        <h1 className="text-3xl font-bold text-[]">Simulator</h1>
       </div>
 
       {/* Inputs */}
@@ -545,39 +571,6 @@ export default function Home() {
       <div className=" flex font-medium space-x-12 ">
         <div className=" flex-col ">
           <CssTextField
-            label="A"
-            variant="outlined"
-            type="number"
-            value={A}
-            onChange={handleA}
-          />
-          <p>A</p>
-        </div>
-
-        <div className=" flex-col ">
-          <CssTextField
-            label="M"
-            variant="outlined"
-            type="number"
-            value={M}
-            onChange={handleM}
-          />
-          <p>M</p>
-        </div>
-
-        <div className=" flex-col ">
-          <CssTextField
-            label="Z0"
-            variant="outlined"
-            type="number"
-            value={z0}
-            onChange={handleZ0}
-          />
-          <p>Z0</p>
-        </div>
-
-        <div className=" flex-col ">
-          <CssTextField
             label="lambda λ"
             variant="outlined"
             type="number"
@@ -586,41 +579,7 @@ export default function Home() {
           />
           <p>Arrival Rate</p>
         </div>
-      </div>
 
-      <div className=" flex font-medium space-x-12 ">
-        <div className=" flex-col ">
-          <CssTextField
-            label="C"
-            variant="outlined"
-            type="number"
-            value={C}
-            onChange={handleC}
-          />
-          <p>C</p>
-        </div>
-
-        <div className=" flex-col ">
-          <CssTextField
-            label="a"
-            variant="outlined"
-            type="number"
-            value={a}
-            onChange={handlea}
-          />
-          <p>a</p>
-        </div>
-
-        <div className=" flex-col ">
-          <CssTextField
-            label="b"
-            variant="outlined"
-            type="number"
-            value={b}
-            onChange={handleb}
-          />
-          <p>b</p>
-        </div>
         <div className=" flex-col ">
           <CssTextField
             label="mu µ"
@@ -631,40 +590,110 @@ export default function Home() {
           />
           <p>Service Rate</p>
         </div>
-      </div>
-      {/* <div className=" flex font-medium space-x-12 "> */}
-      {/* <div className=" flex-col ">
+
+        <div className=" flex-col ">
+          <Box
+            sx={{
+              "& label.Mui-focused": {
+                transition: "all 0.3s ease-in-out",
+                color: "#0394FF",
+              },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  transition: "all 0.3s ease-in-out",
+                  borderColor: "#000000",
+                },
+                "&.Mui-focused fieldset": {
+                  transition: "all 0.3s ease-in-out",
+                  color: "#0394FF",
+                  border: "1px solid",
+                },
+              },
+            }}
+          >
+            <FormControl fullWidth>
+              <InputLabel id="demo-simple-select-label">Model</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={modelType}
+                fullWidth={true}
+                label="Model"
+                onChange={handleModelChange}
+                sx={{ width: "14rem" }}
+              >
+                <MenuItem value={1}>M/M/C</MenuItem>
+                <MenuItem value={2}>M/G/C</MenuItem>
+                <MenuItem value={3}>G/G/C</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          <p>Model Type</p>
+        </div>
+
+        <div className=" flex-col ">
           <CssTextField
-            label="lambda λ"
+            label="servers"
             variant="outlined"
             type="number"
-            value={arrivalRate}
-            onChange={handleArrivalRateChange}
+            value={servers}
+            onChange={handleServerChange}
           />
-          <p>Arrival Rate</p>
-        </div> */}
-
-      {/* <div className=" flex-col ">
-          <CssTextField
-            label="mu µ"
-            variant="outlined"
-            type="number"
-            value={serviceRate}
-            onChange={handleServiceRateChange}
-          />
-          <p>Service Rate</p>
-        </div> */}
-      {/* </div> */}
-
-      <div className="flex">
-        <StyledButton
-          onClick={generatePriorityTable}
-          color="#004021"
-          background="#076638"
-        >
-          Submit
-        </StyledButton>
+          <p>No of Servers</p>
+        </div>
       </div>
+
+      {modelType === 1 && (
+        <>
+          <div className="flex">
+            <StyledButton
+              onClick={generatePriorityTable}
+              color="#004021"
+              background="#076638"
+            >
+              Submit
+            </StyledButton>
+          </div>
+        </>
+      )}
+
+      {modelType === 2 && (
+        <>
+          <div className="flex space-x-5">
+            <div className=" flex-col">
+              <CssTextField
+                label="a"
+                sx={{ width: "5rem" }}
+                variant="outlined"
+                type="number"
+                value={minValue}
+                onChange={handleMinChange}
+              />
+              <p>min value</p>
+            </div>
+
+            <div className=" flex-col">
+              <CssTextField
+                label="b"
+                sx={{ width: "5rem" }}
+                variant="outlined"
+                type="number"
+                value={maxValue}
+                onChange={handleMaxChange}
+              />
+              <p>max value</p>
+            </div>
+          </div>
+          <StyledButton
+            onClick={generatePriorityTable}
+            color="#004021"
+            background="#076638"
+          >
+            Submit
+          </StyledButton>
+        </>
+      )}
 
       {tableGenerated && (
         <div>
@@ -740,7 +769,7 @@ export default function Home() {
             </tbody>
           </table>
 
-          <div className=" flex flex-col  justify-center items-center space-y-4 mt-4 mb-12">
+          {/* <div className=" flex flex-col  justify-center items-center space-y-4 mt-4 mb-12">
             <h1 className="text-2xl font-medium">Priority Table</h1>
             <table className="w-full mt-4 mb-7 text-left">
               <thead>
@@ -766,7 +795,7 @@ export default function Home() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </div> */}
 
           <div>
             <table className="w-full mt-4 mb-7 text-left">
