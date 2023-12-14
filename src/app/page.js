@@ -80,6 +80,7 @@ export default function Home() {
   function QueueLengthViz({ customers }) {
     const svgRef = useRef(null)
     const [queueLengthData, setQueueLengthData] = useState([])
+    // Draw rectangles for each process
 
     useEffect(() => {
       // D3.js code for visualization
@@ -106,28 +107,30 @@ export default function Home() {
         .enter()
         .append("rect")
         .attr("x", (d, i) => xScale(d.StartTime))
-
-        .attr("y", d => yScale(d.EndTime)) // Rectangles now start at EndTime
+        .attr("y", 550)
         .attr("width", d => xScale(d.EndTime) - xScale(d.StartTime) + 100)
-        .attr("height", d => yScale(d.StartTime) - yScale(d.EndTime) + 50)
-        // .attr("width", d => 100)
-        // .attr("height", d => 50)
-        .attr("fill", () => getRandomColor())
+        // .attr("height", d => yScale(d.StartTime) - yScale(d.EndTime) + 40)
+        .attr("height", 50)
 
+        .attr("fill", () => getRandomColor())
+      // .attr("width", d => 100)
+      // .attr("height", d => 50)
       // Add labels for customer numbers
       svg
         .selectAll("text")
         .data(data)
         .enter()
         .append("text")
-        // .attr("x", d => (xScale(d.StartTime) + xScale(d.EndTime)) / 2)
-        // .attr("y", d => (yScale(d.EndTime) + yScale(d.StartTime)) / 2)
-        .attr("x", d => xScale(d.StartTime) + 50)
-        .attr("y", d => yScale(d.EndTime) + 25)
+        .attr("x", d => (xScale(d.StartTime) + xScale(d.EndTime) + 100) / 2)
+        .attr("y", 580)
+        // .attr("x", d => xScale(d.StartTime) + 50)
+
         // .attr("x", (d, i) => (xScale(d.StartTime) + xScale(d.EndTime)) / 2)
         // .attr("y", d => (yScale(d.EndTime) + yScale(d.StartTime)) / 2)
 
         .attr("fill", "white")
+        .style("font-size", "11px")
+
         .text(d => `C${d.customerNo}`)
 
       // Add axes if needed
@@ -140,13 +143,20 @@ export default function Home() {
       // Add Y-axis labels
       svg
         .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 0)
-        .attr("x", -350) // Adjust the position based on your needs
-        .attr("dy", "1em")
+        .attr("x", 500) // Adjust the x position based on your needs
+        .attr("y", 650) // Adjust the y position to place it below the x-axis
         .style("text-anchor", "middle")
         .style("font-size", "14px")
         .text("Time")
+      // svg
+      //   .append("text")
+      //   // .attr("transform", "rotate(-90)")
+      //   .attr("y", 0)
+      //   .attr("x", -350) // Adjust the position based on your needs
+      //   .attr("dy", "1em")
+      //   .style("text-anchor", "middle")
+      //   .style("font-size", "14px")
+      //   .text("Time")
       // svg.append("g").call(yAxis)
     }, [customers])
     const getRandomColor = () => {
@@ -205,7 +215,7 @@ export default function Home() {
 
     return (
       <div>
-        <svg ref={svgRef} width={1000} height={1000} className=" ml-11" />
+        <svg ref={svgRef} width={1000} height={700} className=" ml-11" />
       </div>
     )
   }
@@ -273,39 +283,6 @@ export default function Home() {
       let cumulativeProbability = 0
       const calculatedCpValues = []
       const calculatedCpLookupTable = []
-
-      // function expCDF(x, lambda) {
-      //   // Ensure non-negative x and lambda
-      //   if (x < 0 || lambda <= 0) {
-      //     return 0
-      //   }
-      //   // Calculate the CDF
-      //   return 1 - Math.exp(-lambda * x)
-      // }
-
-      // function poissonCDF(x, lambda) {
-      //   // Ensure non-negative x and lambda
-      //   if (x < 0 || lambda <= 0) {
-      //     return 0
-      //   }
-      //   // Calculate the factorial of x
-      //   const factorialX = calculateFactorial(x)
-
-      //   // Sum the probability terms for k from 0 to x
-      //   let sum = 0
-      //   for (let k = 0; k <= x; k++) {
-      //     sum += (Math.pow(lambda, k) * Math.exp(-lambda)) / factorialX
-      //   }
-      //   return sum
-      // }
-
-      // function uniformCDF(x, min, max) {
-      //   // Ensure valid range
-      //   if (x < min || x > max) {
-      //     return 0
-      //   }
-      //   return (x - min) / (max - min)
-      // }
 
       if (modelType == 1) {
         console.log("m/m/c model")
@@ -899,7 +876,7 @@ export default function Home() {
     }
     setServiceTimes(serTime)
 
-    function mmcSchedule(arrivalTimes, serviceTimes, numServers) {
+    function mmcSchedule(numServers) {
       // Validate input
       if (
         !Array.isArray(arrivalTimes) ||
@@ -971,7 +948,7 @@ export default function Home() {
       return customerTimes
     }
 
-    const customerTimes = mmcSchedule(arrivalTimes, serviceTimes, servers)
+    const customerTimes = mmcSchedule(servers)
 
     const AvgTurnaround = TotalTurnaround / (cpLookupTable.length - 1)
     const AvgResponse = TotalResponseTime / (cpLookupTable.length - 1)
@@ -1319,9 +1296,7 @@ export default function Home() {
               ))}
             </tbody>
           </table>
-          <div className="border-2">
-            <QueueLengthViz customers={Customers} />
-          </div>
+
           <div>
             <table className="w-full mt-4 mb-7 text-left">
               <tr>
@@ -1384,6 +1359,7 @@ export default function Home() {
                 <td className="px-4">{avgWaitTime.toFixed(3)}</td>
               </tr>
             </table>
+            <QueueLengthViz customers={Customers} />
           </div>
         </div>
       )}
