@@ -364,7 +364,7 @@ export default function Home() {
     setServiceTimes(serTime)
 
     let startTime = 0
-    let index = 2
+    let index = 1
     for (let i = 0; i < cpLookupTable.length - 1; i++) {
       start_Time.push(startTime)
 
