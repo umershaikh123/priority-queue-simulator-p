@@ -62,7 +62,7 @@ export default function Home() {
   const [modelType, setModelType] = useState(1)
   const [servers, setservers] = useState(1)
   const [minValue, setminValue] = useState(1)
-  const [maxValue, setmaxValue] = useState(1)
+  const [maxValue, setmaxValue] = useState(2)
 
   function prepareGanttData(customers) {
     return customers.map(customer => {
@@ -80,16 +80,13 @@ export default function Home() {
   function QueueLengthViz({ customers }) {
     const svgRef = useRef(null)
     const [queueLengthData, setQueueLengthData] = useState([])
-    // Draw rectangles for each process
 
     useEffect(() => {
-      // D3.js code for visualization
       const svg = d3.select(svgRef.current)
 
-      const data = customers // Format customer data for chart
+      const data = customers
       console.log("data", data)
 
-      // Set up scales based on the data
       const xScale = d3
         .scaleLinear()
         .domain([0, d3.max(data, d => d.EndTime)])
@@ -100,7 +97,6 @@ export default function Home() {
         .domain([0, d3.max(data, d => d.EndTime)])
         .range([500, 0])
 
-      // Draw rectangles representing customers
       svg
         .selectAll("rect")
         .data(data)
@@ -109,13 +105,11 @@ export default function Home() {
         .attr("x", (d, i) => xScale(d.StartTime))
         .attr("y", 550)
         .attr("width", d => xScale(d.EndTime) - xScale(d.StartTime) + 100)
-        // .attr("height", d => yScale(d.StartTime) - yScale(d.EndTime) + 40)
+
         .attr("height", 50)
 
         .attr("fill", () => getRandomColor())
-      // .attr("width", d => 100)
-      // .attr("height", d => 50)
-      // Add labels for customer numbers
+
       svg
         .selectAll("text")
         .data(data)
@@ -123,48 +117,32 @@ export default function Home() {
         .append("text")
         .attr("x", d => (xScale(d.StartTime) + xScale(d.EndTime) + 100) / 2)
         .attr("y", 580)
-        // .attr("x", d => xScale(d.StartTime) + 50)
-
-        // .attr("x", (d, i) => (xScale(d.StartTime) + xScale(d.EndTime)) / 2)
-        // .attr("y", d => (yScale(d.EndTime) + yScale(d.StartTime)) / 2)
 
         .attr("fill", "white")
         .style("font-size", "11px")
 
         .text(d => `C${d.customerNo}`)
 
-      // Add axes if needed
       const xAxis = d3.axisBottom(xScale)
       const yAxis = d3.axisLeft(yScale)
 
       svg.append("g").attr("transform", `translate(0, ${600})`).call(xAxis)
 
       svg.append("g").attr("transform", `translate(0, ${100})`).call(yAxis)
-      // Add Y-axis labels
+
       svg
         .append("text")
-        .attr("x", 500) // Adjust the x position based on your needs
-        .attr("y", 650) // Adjust the y position to place it below the x-axis
+        .attr("x", 500)
+        .attr("y", 650)
         .style("text-anchor", "middle")
         .style("font-size", "14px")
         .text("Time")
-      // svg
-      //   .append("text")
-      //   // .attr("transform", "rotate(-90)")
-      //   .attr("y", 0)
-      //   .attr("x", -350) // Adjust the position based on your needs
-      //   .attr("dy", "1em")
-      //   .style("text-anchor", "middle")
-      //   .style("font-size", "14px")
-      //   .text("Time")
-      // svg.append("g").call(yAxis)
     }, [customers])
     const getRandomColor = () => {
-      // Generate a random color in hexadecimal format
       return `#${Math.floor(Math.random() * 16777215).toString(16)}`
     }
     const calculateYPosition = (data, index, yScale) => {
-      const overlappingThreshold = 2 // Adjust as needed
+      const overlappingThreshold = 2
 
       if (index === 0) {
         return yScale(data[index].EndTime)
@@ -178,40 +156,6 @@ export default function Home() {
         yScale(currentStart)
       )
     }
-
-    // useEffect(() => {
-    //   // const data = prepareGanttData(customers) // Format customer data for chart
-
-    //   const Customers = [
-    //     { startTime: 1, endTime: 3, category: "A" },
-    //     { startTime: 5, endTime: 8, category: "B" },
-    //     { startTime: 10, endTime: 12, category: "A" },
-    //     { startTime: 15, endTime: 17, category: "C" },
-    //   ]
-    //   const data = Customers
-    //   console.log("data ", data)
-    //   console.log("customers ", customers)
-
-    //   const svg = d3.select(svgRef.current)
-
-    //   const xScale = d3.scaleTime().domain(d3.extent(data, d => d.startTime))
-    //   const yScale = d3.scaleBand().domain(data.map(d => d.category)) // Adjust for categories
-
-    //   const xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%H:%M"))
-
-    //   svg.append("g").attr("transform", "translate(0, 10)").call(xAxis)
-
-    //   svg
-    //     .selectAll("rect")
-    //     .data(data)
-    //     .enter()
-    //     .append("rect")
-    //     .attr("x", d => xScale(d.startTime))
-    //     .attr("y", d => yScale(d.category))
-    //     .attr("width", d => xScale(d.endTime) - xScale(d.startTime))
-    //     .attr("height", yScale.bandwidth())
-    //     .style("fill", "#e0e0e0") // Adjust fill color
-    // }, [Customers])
 
     return (
       <div>
@@ -245,33 +189,30 @@ export default function Home() {
   }
 
   function poissonPDF(x, lambda) {
-    // Ensure non-negative x and lambda
     if (x < 0 || lambda <= 0) {
       return 0
     }
-    // Calculate the factorial of x
+
     const factorialX =
       Math.exp(x * Math.log(x) - x - Math.log(2 * Math.PI)) *
       Math.sqrt(2 * Math.PI * x)
-    // Calculate the PDF
+
     return (Math.pow(lambda, x) * Math.exp(-lambda)) / factorialX
   }
 
   function expPDF(x, lambda) {
-    // Ensure non-negative x and lambda
     if (x < 0 || lambda <= 0) {
       return 0
     }
-    // Calculate the PDF
+
     return lambda * Math.exp(-lambda * x)
   }
 
   function uniformPDF(x, min, max) {
-    // Ensure valid range
     if (x < min || x > max) {
       return 0
     }
-    // Calculate the PDF
+
     return 1 / (max - min)
   }
 
@@ -364,38 +305,33 @@ export default function Home() {
 
     for (let i = 0; i < cpLookupTable.length - 2; i++) {
       const length = cpLookupTable.length - 2
-      // const randomR = Math.round(Math.random() * length)
+
       const U = Math.random()
-      // console.log("randomR", U)
+
       const interArrivalTime = -Math.log(U) / arrivalRate
       iATimeRandom.push(interArrivalTime)
 
-      // console.log("result", result)
       const findIndexInRange = (value, lowerBoundArray, upperBoundArray) => {
-        // console.log("upperBoundArray.length-1", upperBoundArray.length-1)
         console.log("lowerBoundArray[i]", lowerBoundArray[i])
         console.log(
           "upperBoundArray[i]",
           upperBoundArray[i].cumulativeProbability
         )
-        // console.log("value", value)
+
         for (let i = 0; i < upperBoundArray.length - 1; i++) {
           if (
             value >= lowerBoundArray[i] &&
             value < upperBoundArray[i].cumulativeProbability
           ) {
-            return i // Return the index of the upper bound of the range
+            return i
           }
         }
-        // // If the value is greater than or equal to the last upper bound, return the last index
+
         return upperBoundArray.length - 1
       }
       const index = findIndexInRange(interArrivalTime, cpLookupTable, cpValues)
       console.log(" index ", index)
-      // console.log("-Math.log(randomR)", -Math.log(randomR))
-      // console.log("arrivalRate", arrivalRate)
-      // Formula T = -ln(U) / λ
-      // console.log("AvgTime[selectedUpperBound]", AvgTime[selectedUpperBound])
+
       iATime.push(index)
     }
     setInterArrivalTimes(iATime)
@@ -422,9 +358,6 @@ export default function Home() {
       const length = cpLookupTable.length - 1
 
       const randomR = Math.round(Math.random() * length)
-
-      // console.log("randomR", U)
-      // const serviceTime = -Math.log(U) / serviceRate
 
       serTime.push(randomR)
     }
@@ -466,9 +399,6 @@ export default function Home() {
     }
 
     setCustomers(customer)
-    // console.log("TotalTurnaround", TotalTurnaround)
-    // console.log("TotalResponseTime", TotalResponseTime)
-    // console.log("TotalWaitTime ", TotalWaitTime)
 
     const AvgTurnaround = TotalTurnaround / (cpLookupTable.length - 1)
     const AvgResponse = TotalResponseTime / (cpLookupTable.length - 1)
@@ -485,29 +415,21 @@ export default function Home() {
     generateTableData()
     setMMCtableGenerated(true)
 
-    // Calculate Utilization Factor (ρ)
     const utilizationFactor = parseFloat(arrivalRate) / parseFloat(serviceRate)
     setutilizationFactor(utilizationFactor)
-    // console.log("(utilizationFactor)", utilizationFactor)
-    // Number in the Queue
+
     const Lq =
       Math.pow(parseFloat(utilizationFactor), 2) /
       (1 - parseFloat(utilizationFactor))
 
-    // console.log(
-    //   "LQ = ",
-    //   Math.pow(parseFloat(utilizationFactor), 2) /
-    //     (1 - parseFloat(utilizationFactor))
-    // )
     setavgCustomersInQueue(Lq)
-    // Wait in the Queue
+
     const Wq = Lq / parseFloat(arrivalRate)
     setavgTimeInQueue(Wq)
-    // Wait in the System
+
     const W = Wq + 1 / parseFloat(serviceRate)
     setavgTimeInSystem(W)
 
-    // Number in the System
     const L = W * parseFloat(arrivalRate)
     setavgCustomersInSystem(L)
 
@@ -535,10 +457,8 @@ export default function Home() {
     let Z = z0
 
     const e = mod(556169139, 1994)
-    // console.log("mod = ", e)
 
     for (let i = 1; i <= cpLookupTable.length - 1; i++) {
-      // const R = (A * Z + C) % M
       let R = 0
 
       const calc1 = A * Z
@@ -587,29 +507,28 @@ export default function Home() {
 
     for (let i = 0; i < cpLookupTable.length - 2; i++) {
       const length = cpLookupTable.length - 2
-      // const randomR = Math.round(Math.random() * length)
+
       const U = Math.random()
-      // console.log("randomR", U)
+
       const interArrivalTime = -Math.log(U) / arrivalRate
       iATimeRandom.push(interArrivalTime)
 
       const findIndexInRange = (value, lowerBoundArray, upperBoundArray) => {
-        // console.log("upperBoundArray.length-1", upperBoundArray.length-1)
         console.log("lowerBoundArray[i]", lowerBoundArray[i])
         console.log(
           "upperBoundArray[i]",
           upperBoundArray[i].cumulativeProbability
         )
-        // console.log("value", value)
+
         for (let i = 0; i < upperBoundArray.length - 1; i++) {
           if (
             value >= lowerBoundArray[i] &&
             value < upperBoundArray[i].cumulativeProbability
           ) {
-            return i // Return the index of the upper bound of the range
+            return i
           }
         }
-        // // If the value is greater than or equal to the last upper bound, return the last index
+
         return upperBoundArray.length - 1
       }
       const index = findIndexInRange(interArrivalTime, cpLookupTable, cpValues)
@@ -646,7 +565,6 @@ export default function Home() {
     setServiceTimes(serTime)
 
     function mmcSchedule(arrivalTimes, serviceTimes, numServers) {
-      // Validate input
       if (
         !Array.isArray(arrivalTimes) ||
         !Array.isArray(serviceTimes) ||
@@ -658,39 +576,31 @@ export default function Home() {
         )
       }
 
-      // Initialize variables
-      const serverBusyTimes = new Array(numServers).fill(0) // Array to store server busy times
-      const customerTimes = [] // Array to store customer start/end times and additional metrics
+      const serverBusyTimes = new Array(numServers).fill(0)
+      const customerTimes = []
 
-      // Loop through each customer
       for (let i = 0; i < cpLookupTable.length - 1; i++) {
         const arrivalTime = arrivalTimes[i]
         const serviceTime = serviceTimes[i]
 
-        // Find the first available server
         const availableServer = serverBusyTimes.reduce(
           (minIndex, serverTime, index) =>
             serverTime < serverBusyTimes[minIndex] ? index : minIndex,
           0
         )
 
-        // Calculate start and end times for the customer
         const startTime = Math.max(
           arrivalTime,
           serverBusyTimes[availableServer]
         )
         const endTime = startTime + serviceTime
 
-        // Calculate response time (time from arrival to start of service)
         const responseTime = startTime - arrivalTime
 
-        // Calculate waiting time (time spent waiting in queue)
         const waitingTime = responseTime - arrivalTime
 
-        // Calculate turnaround time (time from arrival to completion)
         const turnaroundTime = endTime - arrivalTime
 
-        // Update server busy time
         serverBusyTimes[availableServer] = endTime
 
         start_Time.push(startTime)
@@ -704,7 +614,7 @@ export default function Home() {
         TotalTurnaround += turnaroundTime > 0 ? turnaroundTime : -turnaroundTime
         TotalResponseTime += responseTime > 0 ? responseTime : -responseTime
         TotalWaitTime += waitingTime > 0 ? waitingTime : -waitingTime
-        // Add customer times and metrics to array
+
         customerTimes.push({
           startTime,
           endTime,
@@ -735,29 +645,26 @@ export default function Home() {
     setMMCtableGenerated(true)
 
     function mmcMetrics(arrivalRate, serviceRate, numServers) {
-      // Validate input
       if (arrivalRate <= 0 || serviceRate <= 0 || numServers <= 0) {
         throw new Error(
           "Invalid input: arrivalRate, serviceRate, and numServers must be positive values."
         )
       }
 
-      const lambda = arrivalRate // Arrival rate
-      const mu = serviceRate // Service rate
-      const c = numServers // Number of servers
+      const lambda = arrivalRate
+      const mu = serviceRate
+      const c = numServers
 
-      // Calculate intermediate values
       const c2 = c * c
       const cmu = c * mu
       const lambda2 = lambda * lambda
 
-      // Performance measures
-      const Lq = (lambda * (c2 - c)) / (cmu - lambda2 + 2 * cmu) // Average queue length
-      const L = lambda / (cmu - lambda2) // Average system length
-      const W = L / lambda // Average time in system
-      const Wq = Lq / lambda // Average waiting time
-      const rho = lambda / cmu // Utilization factor
-      const eta = 1 - rho // Idle factor
+      const Lq = (lambda * (c2 - c)) / (cmu - lambda2 + 2 * cmu)
+      const L = lambda / (cmu - lambda2)
+      const W = L / lambda
+      const Wq = Lq / lambda
+      const rho = lambda / cmu
+      const eta = 1 - rho
 
       return {
         Lq,
@@ -818,29 +725,28 @@ export default function Home() {
 
     for (let i = 0; i < cpLookupTable.length - 2; i++) {
       const length = cpLookupTable.length - 2
-      // const randomR = Math.round(Math.random() * length)
+
       const U = Math.random()
-      // console.log("randomR", U)
+
       const interArrivalTime = -Math.log(U) / arrivalRate
       iATimeRandom.push(interArrivalTime)
 
       const findIndexInRange = (value, lowerBoundArray, upperBoundArray) => {
-        // console.log("upperBoundArray.length-1", upperBoundArray.length-1)
         console.log("lowerBoundArray[i]", lowerBoundArray[i])
         console.log(
           "upperBoundArray[i]",
           upperBoundArray[i].cumulativeProbability
         )
-        // console.log("value", value)
+
         for (let i = 0; i < upperBoundArray.length - 1; i++) {
           if (
             value >= lowerBoundArray[i] &&
             value < upperBoundArray[i].cumulativeProbability
           ) {
-            return i // Return the index of the upper bound of the range
+            return i
           }
         }
-        // // If the value is greater than or equal to the last upper bound, return the last index
+
         return upperBoundArray.length - 1
       }
       const index = findIndexInRange(interArrivalTime, cpLookupTable, cpValues)
@@ -877,7 +783,6 @@ export default function Home() {
     setServiceTimes(serTime)
 
     function mmcSchedule(numServers) {
-      // Validate input
       if (
         !Array.isArray(arrivalTimes) ||
         !Array.isArray(serviceTimes) ||
@@ -889,39 +794,31 @@ export default function Home() {
         )
       }
 
-      // Initialize variables
-      const serverBusyTimes = new Array(numServers).fill(0) // Array to store server busy times
-      const customerTimes = [] // Array to store customer start/end times and additional metrics
+      const serverBusyTimes = new Array(numServers).fill(0)
+      const customerTimes = []
 
-      // Loop through each customer
       for (let i = 0; i < cpLookupTable.length - 1; i++) {
         const arrivalTime = arrivalTimes[i]
         const serviceTime = serviceTimes[i]
 
-        // Find the first available server
         const availableServer = serverBusyTimes.reduce(
           (minIndex, serverTime, index) =>
             serverTime < serverBusyTimes[minIndex] ? index : minIndex,
           0
         )
 
-        // Calculate start and end times for the customer
         const startTime = Math.max(
           arrivalTime,
           serverBusyTimes[availableServer]
         )
         const endTime = startTime + serviceTime
 
-        // Calculate response time (time from arrival to start of service)
         const responseTime = startTime - arrivalTime
 
-        // Calculate waiting time (time spent waiting in queue)
         const waitingTime = responseTime - arrivalTime
 
-        // Calculate turnaround time (time from arrival to completion)
         const turnaroundTime = endTime - arrivalTime
 
-        // Update server busy time
         serverBusyTimes[availableServer] = endTime
 
         start_Time.push(startTime)
@@ -935,7 +832,7 @@ export default function Home() {
         TotalTurnaround += turnaroundTime > 0 ? turnaroundTime : -turnaroundTime
         TotalResponseTime += responseTime > 0 ? responseTime : -responseTime
         TotalWaitTime += waitingTime > 0 ? waitingTime : -waitingTime
-        // Add customer times and metrics to array
+
         customerTimes.push({
           startTime,
           endTime,
@@ -972,20 +869,17 @@ export default function Home() {
       serviceMax,
       numServers
     ) {
-      // Validate input
       if (
         arrivalRate <= 0 ||
         serviceMin >= serviceMax ||
         serviceMin <= 0 ||
         numServers <= 0
       ) {
-        throw new Error(
-          "Invalid input: arrivalRate, serviceMin, serviceMax, and numServers must be positive values with serviceMin < serviceMax."
-        )
+        throw new Error("Invalid input: serviceMin < serviceMax.")
       }
-      const c = numServers // Number of servers
-      const lambda = arrivalRate // Arrival rate
-      const rho = lambda / (c * serviceRate) // Utilization factor
+      const c = numServers
+      const lambda = arrivalRate
+      const rho = lambda / (c * serviceRate)
       const Variance = Math.pow(serviceMax - serviceMin, 2) / 12
 
       const Lq =
@@ -997,9 +891,8 @@ export default function Home() {
       const W = Wq + 1 / serviceRate
 
       const L = Lq + lambda * W
-      // Lq variance using Pollaczek-Khinchin formula
-      // const LqVariance = Lq * (1 + rho * (rho * (c * mu * sigma2 + 2 * lambda * sigma2) + lambda * lambda)) / (1 - rho) * (1 - rho);
-      const eta = 1 - rho // Idle factor
+
+      const eta = 1 - rho
       return {
         Variance,
         rho,
@@ -1124,9 +1017,6 @@ export default function Home() {
               <div className="flex">
                 <StyledButton
                   onClick={M_M_1_Table}
-                  // onClick={() => {
-                  //   console.log("M/M/1")
-                  // }}
                   color="#004021"
                   background="#076638"
                 >
@@ -1138,9 +1028,6 @@ export default function Home() {
             <>
               <div className="flex">
                 <StyledButton
-                  // onClick={() => {
-                  //   console.log("M/M/C")
-                  // }}
                   onClick={M_M_C_Table}
                   color="#004021"
                   background="#076638"
@@ -1185,9 +1072,6 @@ export default function Home() {
               <>
                 <div className="flex">
                   <StyledButton
-                    // onClick={() => {
-                    //   console.log("M/G/1")
-                    // }}
                     onClick={M_G_1_Table}
                     color="#004021"
                     background="#076638"
@@ -1200,9 +1084,6 @@ export default function Home() {
               <>
                 <div className="flex">
                   <StyledButton
-                    // onClick={() => {
-                    //   console.log("M/G/C")
-                    // }}
                     onClick={M_G_1_Table}
                     color="#004021"
                     background="#076638"
@@ -1298,6 +1179,9 @@ export default function Home() {
           </table>
 
           <div>
+            <h1 className="w-full   text-3xl font-semibold justify-center items-center flex">
+              Queuing Calculator
+            </h1>
             <table className="w-full mt-4 mb-7 text-left">
               <tr>
                 <th className="text-left text-white px-4">Metric</th>
@@ -1359,7 +1243,13 @@ export default function Home() {
                 <td className="px-4">{avgWaitTime.toFixed(3)}</td>
               </tr>
             </table>
-            <QueueLengthViz customers={Customers} />
+            <h1 className="w-full   text-3xl font-semibold justify-center items-center flex">
+              Gantt Chart
+            </h1>
+
+            <div className=" flex justify-center">
+              <QueueLengthViz customers={Customers} />
+            </div>
           </div>
         </div>
       )}
@@ -1448,6 +1338,9 @@ export default function Home() {
           </table>
 
           <div>
+            <h1 className="w-full   text-3xl font-semibold justify-center items-center flex">
+              Queuing Calculator
+            </h1>
             <table className="w-full mt-4 mb-7 text-left">
               <tr>
                 <th className="text-left text-white px-4">Metric</th>
@@ -1514,6 +1407,13 @@ export default function Home() {
                 <td className="px-4">{avgWaitTime.toFixed(3)}</td>
               </tr>
             </table>
+            <h1 className="w-full   text-3xl font-semibold justify-center items-center flex">
+              Gantt Chart
+            </h1>
+
+            <div className=" flex justify-center">
+              <QueueLengthViz customers={Customers} />
+            </div>
           </div>
         </div>
       )}
@@ -1600,6 +1500,7 @@ export default function Home() {
           </table>
 
           <div>
+            <h1>Queuing Calculator</h1>
             <table className="w-full mt-4 mb-7 text-left">
               <tr>
                 <th className="text-left text-white px-4">Metric</th>
